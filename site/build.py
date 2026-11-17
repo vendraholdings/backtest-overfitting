@@ -100,12 +100,11 @@ def build() -> None:
 
 
 TEMPLATE = """<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="color-scheme" content="light"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Backtest overfitting</title>
 <meta name="description" content="Overfitting diagnostics applied to a search over <<n_trials>> equity-ranking models.">
 <style>
 :root{--ink:#1f2933;--muted:#6b7280;--line:#e5e7eb;--bg:#ffffff;--soft:#f4f7fa;--blue:#1f6fb2;--accent:#c8553d}
-@media (prefers-color-scheme: dark){:root{--ink:#e5e7eb;--muted:#9aa5b1;--line:#2d3748;--bg:#111827;--soft:#1a2332}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "DejaVu Sans",Helvetica,Arial,sans-serif}
 main{max-width:980px;margin:0 auto;padding:0 16px 64px}
 header{padding:40px 0 8px}h1{font-size:1.9rem;line-height:1.25;margin:0 0 8px}h2{font-size:1.25rem;margin:40px 0 8px;border-top:1px solid var(--line);padding-top:24px}
@@ -117,7 +116,7 @@ figure{margin:20px 0}figure img{max-width:100%;height:auto}figcaption{color:var(
 details{border:1px solid var(--line);border-radius:6px;padding:8px 14px;margin:10px 0}summary{cursor:pointer;font-weight:600}
 code{background:var(--soft);padding:1px 5px;border-radius:3px}table{border-collapse:collapse;width:100%;font-size:.9rem}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
 footer{color:var(--muted);font-size:.85rem;margin-top:48px}
-</style></head><body><main>
+</style><script src="plotly.min.js"></script></head><body><main>
 <header><h1>How much of a backtest is luck? Selection bias in a <<n_trials>>-model equity search</h1>
 <p class="lead">A search over <<n_trials>> machine-learning configurations (<<n_lgb>> gradient-boosted trees, <<n_mlx>> neural networks) produced a best
 net Sharpe ratio of <<best_sr>>. Standard overfitting diagnostics are applied to the full set of trials, and checked on synthetic data with a known answer.</p>
@@ -143,7 +142,6 @@ The trial with the highest training Sharpe ratio is selected and its relative ra
 Full discussion in the paper.</p></details>
 <footer>Source code and data: <a href="{{REPO}}">{{REPO}}</a>. Released under the MIT licence.</footer>
 </main>
-<script src="plotly.min.js"></script>
 </body></html>
 """
 
