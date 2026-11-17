@@ -125,6 +125,16 @@ def main() -> None:
     out["spa"] = {"n_boot": n_boot, "headline_mean_block": 2, "by_block": spa}
     out["spa_by_family"] = {f: spa_tests(R[:, fam == f], n_boot=n_boot, mean_block=2, seed=2).__dict__ for f in ("lgb", "mlx")}
 
+    # ---- size of the SPA test under the null, by bootstrap block length ----------------------------------
+    from overfit import synthetic as syn
+    reps_size = 20 if a.quick else 150
+    size = {}
+    for L in (1, 2, 3, 6):
+        rej = [spa_tests(syn.noise(249, 300, np.random.default_rng(1000 + i)), n_boot=1500, mean_block=L, seed=i).p_spa_consistent < 0.05
+               for i in range(reps_size)]
+        size[str(L)] = float(np.mean(rej))
+    out["spa_size_by_block"] = {"reps": reps_size, "n_trials": 300, "n_boot": 1500, "rejection_rate_5pct": size}
+
     # ---- search-size curve --------------------------------------------------------------------------------
     sizes = [10, 20, 50, 100, 200, 500, 1000, N] if not a.quick else [10, 100, N]
     curve = search_size_curve(R, sizes, reps=5 if a.quick else 30, seed=3, null_reps=100 if a.quick else 300)

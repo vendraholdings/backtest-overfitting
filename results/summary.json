@@ -281,6 +281,17 @@
       "mean_block": 2
     }
   },
+  "spa_size_by_block": {
+    "reps": 150,
+    "n_trials": 300,
+    "n_boot": 1500,
+    "rejection_rate_5pct": {
+      "1": 0.03333333333333333,
+      "2": 0.05333333333333334,
+      "3": 0.08,
+      "6": 0.18
+    }
+  },
   "search_size_curve": [
     {
       "n_trials": 10,
@@ -491,5 +502,5 @@
       "best_is_planted": 1.0
     }
   ],
-  "runtime_seconds": 67.5
+  "runtime_seconds": 74.9
 }
