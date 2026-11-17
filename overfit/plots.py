@@ -10,13 +10,13 @@ import pandas as pd
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
 
 from . import theme  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 ANN = np.sqrt(252 / 21)
-CMAP = LinearSegmentedColormap.from_list("seq", [(p, c) for p, c in theme.SEQUENTIAL])
+CMAP = theme.CMAP  # turbo
+FIGURES = ("fig1", "fig2", "fig3", "fig4", "fig5", "fig6", "fig7", "fig8")
 
 
 def load() -> dict:
@@ -36,20 +36,27 @@ def _save(fig, out: Path, name: str) -> None:
     plt.close(fig)
 
 
+def _colorbar(fig, mappable, ax, label, **kw):
+    cb = fig.colorbar(mappable, ax=ax, label=label, pad=kw.pop("pad", 0.02), **kw)
+    cb.outline.set_visible(False)
+    cb.ax.tick_params(color=theme.MUTED, labelcolor=theme.MUTED)
+    return cb
+
+
 def fig1(d, out):
     s = d["splits"]
     x, y = s.is_sr * ANN, s.oos_sr * ANN
     fig, ax = plt.subplots(figsize=(5.6, 4.4))
     hb = ax.hexbin(x, y, gridsize=45, cmap=CMAP, mincnt=1, linewidths=0.2)
     lim = [min(x.min(), y.min()) - 0.05, max(x.max(), y.max()) + 0.05]
-    ax.plot(lim, lim, color=theme.MUTED, ls="--", lw=1, label="OOS = IS")
+    ax.plot(lim, lim, color=theme.MUTED, ls="--", lw=1.2, label="OOS = IS")
     b, a = np.polyfit(x, y, 1)
     xs = np.array([x.min(), x.max()])
-    ax.plot(xs, a + b * xs, color=theme.MLX, label=f"Regression slope {b:.2f}")
+    ax.plot(xs, a + b * xs, color=theme.INK, label=f"Regression slope {b:.2f}")
     ax.set(xlabel="In-sample Sharpe of the selected trial (annualised)", ylabel="Out-of-sample Sharpe (annualised)")
     ax.grid(False)
     ax.legend(loc="upper left")
-    fig.colorbar(hb, ax=ax, label="Number of splits", pad=0.02)
+    _colorbar(fig, hb, ax, "Number of splits")
     _save(fig, out, "fig1_is_vs_oos")
 
 
@@ -58,8 +65,8 @@ def fig2(d, out):
     pbo = d["summary"]["cscv"]["pbo"]
     fig, ax = plt.subplots(figsize=(5.6, 3.6))
     bins = np.linspace(lam.min(), lam.max(), 36)
-    ax.hist(lam[lam > 0], bins=bins, color=theme.SHADE, edgecolor="white", lw=0.4, label="λ > 0")
-    ax.hist(lam[lam <= 0], bins=bins, color=theme.MLX, edgecolor="white", lw=0.4, label=f"λ ≤ 0 (PBO = {pbo:.3f})")
+    ax.hist(lam[lam > 0], bins=bins, color=theme.SHADE, edgecolor=theme.BG, lw=0.4, label="λ > 0")
+    ax.hist(lam[lam <= 0], bins=bins, color=theme.MLX, edgecolor=theme.BG, lw=0.4, label=f"λ ≤ 0 (PBO = {pbo:.3f})")
     ax.axvline(0, color=theme.INK, lw=1)
     ax.set(xlabel="Logit λ of the out-of-sample rank of the selected trial", ylabel="Number of splits")
     ax.legend()
@@ -77,12 +84,17 @@ def fig3(d, out, elev=28, azim=-55, name="fig3_rank_surface", size=(6.0, 4.6)):
     X, Y = np.meshgrid(g, g, indexing="ij")
     fig = plt.figure(figsize=size)
     ax = fig.add_subplot(111, projection="3d")
-    ax.plot_surface(X, Y, j, cmap=CMAP, linewidth=0.2, edgecolor="#ffffff", antialiased=True, rstride=1, cstride=1)
+    ax.plot_surface(X, Y, j, cmap=CMAP, linewidth=0.15, edgecolor=theme.BG, antialiased=True, rstride=1, cstride=1)
     ax.set(xlabel="In-sample rank", ylabel="Out-of-sample rank", zlabel="log2 density ratio")
     ax.zaxis.labelpad = -2
     ax.view_init(elev=elev, azim=azim)
     ax.xaxis.pane.fill = ax.yaxis.pane.fill = ax.zaxis.pane.fill = False
+    ax.set_facecolor(theme.BG)
     ax.grid(True)
+    for a in (ax.xaxis, ax.yaxis, ax.zaxis):
+        a.pane.set_edgecolor(theme.GRID)
+        a._axinfo["grid"].update(color=theme.GRID, linewidth=0.6)
+        a.line.set_color(theme.GRID)
     if name:
         _save(fig, out, name)
     return fig
@@ -109,10 +121,17 @@ def fig4(d, out):
         (xv, xl), (yv, yl) = f(cx), f(cy)
         jx = rng.normal(0, 0.012 * (xv.max() - xv.min()), len(sub))
         jy = rng.normal(0, 0.012 * (yv.max() - yv.min()), len(sub))
-        ax.scatter(xv + jx, yv + jy, sub.oos_mean_sr_annual, s=5, color=theme.FAMILY[fam], alpha=0.5, depthshade=True)
+        sc = ax.scatter(xv + jx, yv + jy, sub.oos_mean_sr_annual, s=6, c=sub.oos_mean_sr_annual, cmap=CMAP, alpha=0.75, depthshade=True, linewidths=0)
         ax.set(xlabel=cx[4:] + xl, ylabel=cy[4:] + yl, zlabel="Mean OOS Sharpe")
         ax.set_title(theme.FAMILY_LABEL[fam], loc="left")
         ax.view_init(elev=24, azim=-60)
+        ax.set_facecolor(theme.BG)
+        ax.xaxis.pane.fill = ax.yaxis.pane.fill = ax.zaxis.pane.fill = False
+        for a in (ax.xaxis, ax.yaxis, ax.zaxis):
+            a.pane.set_edgecolor(theme.GRID)
+            a._axinfo["grid"].update(color=theme.GRID, linewidth=0.6)
+            a.line.set_color(theme.GRID)
+        _colorbar(fig, sc, ax, "", shrink=0.6, pad=0.22)
     _save(fig, out, "fig4_landscape")
 
 
@@ -125,8 +144,8 @@ def fig5(d, out):
     a1.fill_between(c.n_trials, c.null_best_sharpe_lo, c.null_best_sharpe_hi, color=theme.MLX, alpha=0.15, lw=0)
     a1.set(xscale="log", xlabel="Number of trials searched, n", ylabel="Best full-sample Sharpe (annualised)", ylim=(-0.3, 1.15))
     a1.legend(loc="center right")
-    a2.plot(c.n_trials, c.pbo_mean, color=theme.INK, marker="o", ms=3.5)
-    a2.fill_between(c.n_trials, c.pbo_lo, c.pbo_hi, color=theme.INK, alpha=0.12, lw=0)
+    a2.plot(c.n_trials, c.pbo_mean, color=theme.AMBER, marker="o", ms=3.5)
+    a2.fill_between(c.n_trials, c.pbo_lo, c.pbo_hi, color=theme.AMBER, alpha=0.15, lw=0)
     a2.axhline(0.5, color=theme.MUTED, ls="--", lw=1)
     a2.set(xscale="log", xlabel="Number of trials searched, n", ylabel="PBO (CSCV, S = 16)", ylim=(0, 1))
     _save(fig, out, "fig5_search_size")
@@ -178,14 +197,15 @@ def fig8(d, out):
     im = ax.imshow(d["corr"], cmap=CMAP, vmin=0.4, vmax=1.0, interpolation="nearest")
     ax.set(xlabel="Trials (hierarchical cluster order)", ylabel="Trials (hierarchical cluster order)")
     ax.grid(False)
-    fig.colorbar(im, ax=ax, label="Correlation of net returns (block average)", pad=0.02)
+    _colorbar(fig, im, ax, "Correlation of net returns (block average)")
     ax.set_title(f"Mean pairwise correlation {s['mean_pairwise']:.2f}")
     _save(fig, out, "fig8_correlation")
 
 
-def all_figures(out: Path | None = None) -> None:
-    theme.apply()
-    out = out or ROOT / "paper" / "figures"
+def all_figures(out: Path | None = None, mode: str = "light") -> None:
+    """Render figures 1-8 in the given theme mode (light: paper/figures, dark: docs/figures)."""
+    theme.use(mode)
+    out = out or ROOT / ("paper" if mode == "light" else "docs") / "figures"
     d = load()
     for f in (fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8):
         f(d, out)

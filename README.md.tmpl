@@ -63,7 +63,8 @@ overfit/    cscv.py  sharpe.py  haircut.py  spa.py  trials.py  validate.py  synt
 scripts/    export_trials.py  run_all.py  make_figures.py  make_hero.py  build_paper.py  build_readme.py
 tests/      CSCV vs slow loop, PSR/DSR closed forms, haircuts, bootstrap, SPA, synthetic validation
 site/       build.py  (static page; Plotly bundled)
-paper/      paper.typ.tmpl  refs.bib  paper.pdf  figures/
+paper/      paper.typ.tmpl  refs.bib  paper.pdf  figures/  (light, for the paper)
+docs/       hero.gif  hero.mp4  figures/  (dark, for the README and site)
 data/       trials.parquet  configs.parquet
 results/    summary.json and tables
 ```

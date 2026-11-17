@@ -27,8 +27,8 @@ REPO = "https://github.com/vendraholdings/backtest-overfitting"
 
 def fig3_plotly(d) -> str:
     g, j = joint_grid(d)
-    fig = go.Figure(go.Surface(x=g, y=g, z=j.T, colorscale=theme.SEQUENTIAL, showscale=True,
-                               colorbar=dict(title="log2 ratio", thickness=12, len=0.6),
+    fig = go.Figure(go.Surface(x=g, y=g, z=j.T, colorscale=theme.COLORSCALE, showscale=True,
+                               colorbar=dict(title="log2 ratio", thickness=12, len=0.6, outlinewidth=0),
                                hovertemplate="IS rank %{x:.2f}<br>OOS rank %{y:.2f}<br>log2 density ratio %{z:.2f}<extra></extra>"))
     fig.update_layout(**theme.plotly_layout(height=560, scene=dict(
         xaxis_title="In-sample rank", yaxis_title="Out-of-sample rank", zaxis_title="log2 density ratio",
@@ -48,7 +48,8 @@ def fig4_plotly(d, fam: str) -> str:
     jy = rng.normal(0, 0.012 * np.ptp(yv), len(sub))
     text = [f"{r.trial}<br>full-sample Sharpe {r.sharpe_full:.2f}<br>mean OOS Sharpe {r.oos_mean_sr_annual:.2f}" for r in sub.itertuples()]
     fig = go.Figure(go.Scatter3d(x=xv + jx, y=yv + jy, z=sub.oos_mean_sr_annual, mode="markers", text=text, hoverinfo="text",
-                                 marker=dict(size=2.6, color=theme.FAMILY[fam], opacity=0.6)))
+                                 marker=dict(size=2.8, color=sub.oos_mean_sr_annual, colorscale=theme.COLORSCALE, opacity=0.8,
+                                             colorbar=dict(title="Mean OOS Sharpe", thickness=10, len=0.6, outlinewidth=0))))
     fig.update_layout(**theme.plotly_layout(height=440, scene=dict(xaxis_title=xl, yaxis_title=yl, zaxis_title="Mean OOS Sharpe"),
                                             margin=dict(l=0, r=0, t=10, b=0)))
     return pio.to_html(fig, include_plotlyjs=False, full_html=False, div_id=f"fig4-{fam}", config=dict(displaylogo=False))
@@ -65,11 +66,12 @@ def img(name: str, alt: str) -> str:
 
 
 def build() -> None:
+    theme.use("dark")
     f, d = facts(), load()
     if DIST.exists():
         shutil.rmtree(DIST)
     (DIST / "figures").mkdir(parents=True)
-    for p in (ROOT / "paper" / "figures").glob("*.png"):
+    for p in (ROOT / "docs" / "figures").glob("*.png"):
         shutil.copy(p, DIST / "figures" / p.name)
     shutil.copy(Path(plotly.__file__).parent / "package_data" / "plotly.min.js", DIST / "plotly.min.js")
     shutil.copy(ROOT / "results" / "summary.json", DIST / "summary.json")
@@ -100,21 +102,21 @@ def build() -> None:
 
 
 TEMPLATE = """<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="color-scheme" content="light"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="color-scheme" content="dark"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Backtest overfitting</title>
 <meta name="description" content="Overfitting diagnostics applied to a search over <<n_trials>> equity-ranking models.">
 <style>
-:root{--ink:#1f2933;--muted:#6b7280;--line:#e5e7eb;--bg:#ffffff;--soft:#f4f7fa;--blue:#1f6fb2;--accent:#c8553d}
+:root{color-scheme:dark;--ink:#e5e7eb;--muted:#9aa5b1;--line:#1f2937;--bg:#0b0f17;--soft:#121826;--blue:#4cc9f0;--accent:#f3722c}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "DejaVu Sans",Helvetica,Arial,sans-serif}
 main{max-width:980px;margin:0 auto;padding:0 16px 64px}
 header{padding:40px 0 8px}h1{font-size:1.9rem;line-height:1.25;margin:0 0 8px}h2{font-size:1.25rem;margin:40px 0 8px;border-top:1px solid var(--line);padding-top:24px}
-p.lead{color:var(--muted);margin:0 0 16px;max-width:760px}nav a{margin-right:16px;color:var(--blue);text-decoration:none}nav a:hover{text-decoration:underline}
+p.lead{color:var(--muted);margin:0 0 16px;max-width:760px}a{color:var(--blue)}nav a{margin-right:16px;text-decoration:none}nav a:hover,a:hover{text-decoration:underline}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:24px 0}
-.card{background:var(--soft);border-radius:6px;padding:14px 16px}.num{font-size:1.6rem;font-weight:600}.lab{color:var(--muted);font-size:.85rem}
-figure{margin:20px 0}figure img{max-width:100%;height:auto}figcaption{color:var(--muted);font-size:.88rem;max-width:820px;margin-top:6px}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:14px 16px}.num{font-size:1.6rem;font-weight:600}.lab{color:var(--muted);font-size:.85rem}
+figure{margin:20px 0}figure img{max-width:100%;height:auto;display:block}figcaption{color:var(--muted);font-size:.88rem;max-width:820px;margin-top:6px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media(max-width:720px){.two{grid-template-columns:1fr}}
-details{border:1px solid var(--line);border-radius:6px;padding:8px 14px;margin:10px 0}summary{cursor:pointer;font-weight:600}
-code{background:var(--soft);padding:1px 5px;border-radius:3px}table{border-collapse:collapse;width:100%;font-size:.9rem}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+details{background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:8px 14px;margin:10px 0}summary{cursor:pointer;font-weight:600}
+code{background:var(--soft);border:1px solid var(--line);padding:1px 5px;border-radius:3px}table{border-collapse:collapse;width:100%;font-size:.9rem}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
 footer{color:var(--muted);font-size:.85rem;margin-top:48px}
 </style><script src="plotly.min.js"></script></head><body><main>
 <header><h1>How much of a backtest is luck? Selection bias in a <<n_trials>>-model equity search</h1>

@@ -13,7 +13,7 @@ from .plots import ROOT, fig3, load, plt
 
 
 def render(frames: int = 72, out: Path | None = None) -> None:
-    theme.apply()
+    theme.use("dark")
     out = out or ROOT / "docs"
     out.mkdir(exist_ok=True)
     d = load()
@@ -29,7 +29,7 @@ def render(frames: int = 72, out: Path | None = None) -> None:
             fig.savefig(p, dpi=100)
             plt.close(fig)
             imgs.append(Image.open(p).convert("RGB").resize((1200, 675)))
-        pal = [im.quantize(colors=64, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE) for im in imgs]
+        pal = [im.quantize(colors=160, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE) for im in imgs]
         pal[0].save(out / "hero.gif", save_all=True, append_images=pal[1:], duration=60, loop=0, optimize=True)
         for i, im in enumerate(imgs):
             im.save(Path(tmp) / f"g{i:03d}.png")
