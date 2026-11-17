@@ -212,3 +212,24 @@ def test_effective_n_recovers_families():
     assert 5 <= pr <= 25
     ind = eigen_effective_n(correlation(syn.noise(400, 50, rng)))["participation_ratio"]
     assert ind > 30
+
+
+def test_calibrated_effective_n():
+    from overfit.trials import calibrated_effective_n
+    rng = np.random.default_rng(0)
+    ind = calibrated_effective_n(syn.noise(249, 200, rng), reps=300, seed=0)
+    assert 100 <= ind["n_eff"] <= 200
+    common = syn.correlated_families(249, 1, 200, 0.995, rng)  # one family, almost identical trials
+    assert calibrated_effective_n(common, reps=300, seed=0)["n_eff"] < 60
+
+
+def test_spa_close_to_arch_reference():
+    arch = pytest.importorskip("arch.bootstrap")
+    for sr, seed in ((0.0, 1), (0.5, 2), (1.0, 3)):
+        rng = np.random.default_rng(seed)
+        x = syn.noise(249, 60, rng) if sr == 0 else syn.noise_plus_signal(249, 60, sr, rng)
+        ref = arch.SPA(np.zeros(249), -x, block_size=2, reps=5000, bootstrap="stationary", seed=0, studentize=True)
+        ref.compute()
+        mine = spa_tests(x, n_boot=20000, mean_block=2, seed=0)
+        assert abs(mine.p_spa_consistent - ref.pvalues["consistent"]) < 0.06
+        assert abs(mine.p_spa_lower - ref.pvalues["lower"]) < 0.06

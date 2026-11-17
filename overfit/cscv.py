@@ -47,6 +47,8 @@ class CSCVResult:
     n_trials: int
     n_blocks: int
     joint: np.ndarray | None = None  # (bins, bins) normalised joint density of IS rank x OOS rank over all trials
+    trial_oos_mean: np.ndarray | None = None   # (N,) mean OOS Sharpe of each trial over all splits
+    trial_is_mean: np.ndarray | None = None    # (N,) mean IS Sharpe of each trial over all splits
 
     @property
     def pbo(self) -> float:
@@ -96,6 +98,7 @@ def cscv(returns: np.ndarray, s: int = 16, joint_bins: int | None = None, chunk:
     n_half = blen * s // 2
     out = {k: [] for k in ("is_sr", "oos_sr", "selected", "omega", "oos_mean_sr")}
     joint = np.zeros((joint_bins, joint_bins)) if joint_bins else None
+    oos_acc, is_acc = np.zeros(n_trials), np.zeros(n_trials)
     for a in range(0, len(m), chunk):
         mi = m[a:a + chunk]
         is_sr = _sharpe_from_sums(mi @ bs, mi @ bq, n_half)
@@ -112,6 +115,8 @@ def cscv(returns: np.ndarray, s: int = 16, joint_bins: int | None = None, chunk:
         out["selected"].append(sel)
         out["omega"].append(rank / (n_trials + 1))
         out["oos_mean_sr"].append(oos_sr.mean(1))
+        oos_acc += oos_sr.sum(0)
+        is_acc += is_sr.sum(0)
         if joint is not None:
             ri = is_sr.argsort(1).argsort(1) / (n_trials - 1)
             ro = oos_sr.argsort(1).argsort(1) / (n_trials - 1)
@@ -121,7 +126,8 @@ def cscv(returns: np.ndarray, s: int = 16, joint_bins: int | None = None, chunk:
     cat = {k: np.concatenate(v) for k, v in out.items()}
     omega = cat["omega"]
     return CSCVResult(logit=np.log(omega / (1 - omega)), n_trials=n_trials, n_blocks=s,
-                      joint=None if joint is None else joint / joint.sum(), **cat)
+                      joint=None if joint is None else joint / joint.sum(),
+                      trial_oos_mean=oos_acc / len(m), trial_is_mean=is_acc / len(m), **cat)
 
 
 def cscv_slow(returns: np.ndarray, s: int = 16) -> dict:

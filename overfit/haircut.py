@@ -18,8 +18,8 @@ def pvalues(sr_period: np.ndarray, t_obs: int) -> np.ndarray:
 
 
 def adjust(p: np.ndarray, method: str, m: int | None = None) -> np.ndarray:
-    """Adjusted p-values. ``m`` overrides the number of tests (e.g. an effective N); it must be >= len(p) for
-    holm/bhy to be well defined, otherwise the nominal count is used with the same formula scaled to ``m``."""
+    """Adjusted p-values. ``m`` overrides the number of tests (e.g. an effective N). When ``m`` < len(p) the Holm
+    multiplier (m - k + 1) is floored at 1."""
     p = np.asarray(p, dtype=np.float64)
     n = len(p)
     m = n if m is None else m
@@ -29,7 +29,7 @@ def adjust(p: np.ndarray, method: str, m: int | None = None) -> np.ndarray:
     if method == "bonferroni":
         adj_sorted = ps * m
     elif method == "holm":
-        adj_sorted = np.maximum.accumulate(ps * (m - k + 1))
+        adj_sorted = np.maximum.accumulate(ps * np.maximum(m - k + 1, 1))
     elif method == "bhy":
         c = np.sum(1.0 / np.arange(1, m + 1))
         adj_sorted = np.minimum.accumulate((ps * m * c / k)[::-1])[::-1]
