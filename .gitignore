@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env*
+*.key
+*.pem
+secrets/
+site/dist/
+.pytest_cache/
+PLAN.md

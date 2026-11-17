@@ -1,0 +1,21 @@
+[project]
+name = "overfit"
+version = "0.1.0"
+description = "Backtest-overfitting diagnostics (CSCV/PBO, deflated Sharpe, multiple-testing haircuts, SPA) applied to a 1,979-trial equity search."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26", "scipy>=1.11", "pandas>=2.1", "pyarrow>=14", "matplotlib>=3.8", "plotly>=5.20"]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["overfit"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
