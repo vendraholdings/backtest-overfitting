@@ -5,6 +5,11 @@
 Overfitting diagnostics applied to a complete search of 1,979 machine-learning configurations for a cross-sectional equity strategy.
 The best configuration has a net Sharpe ratio of 1.03; the question is how much of that survives selection bias.
 
+> **Scope.** The trials were run on today's index members. A later point-in-time rerun in the
+> [quant](https://github.com/vendraholdings/quant) repository shows that the family-level signal is largely survivorship
+> bias. This project measures a separate effect, selection bias from searching many configurations, and its diagnostics
+> apply unchanged to any trial matrix.
+
 ![Joint density of in-sample and out-of-sample rank, rotating view](docs/hero.gif)
 
 *Figure 3. Joint density of the in-sample and out-of-sample rank of every trial over 12,870 cross-validation splits (log base 2, relative to independence).
